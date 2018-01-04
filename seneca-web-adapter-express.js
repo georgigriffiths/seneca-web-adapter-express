@@ -88,12 +88,14 @@ function handleRoute (seneca, options, request, reply, route, next) {
       }
 
       // Redirect or reply depending on config.
-      if (route.redirect) {
-        return reply.redirect(route.redirect)
+      if (route.redirect || response.redirect) {
+        return reply.redirect(route.redirect || response.redirect)
       }
-      if (route.autoreply) {
-        return reply.send(response)
-      }
+
+      return reply.status(response.statusCode || 200)
+                  .set(response.headers || {})
+                  .send(response.body)
+      
     })
   }
 }
