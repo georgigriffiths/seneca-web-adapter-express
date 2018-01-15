@@ -69,7 +69,7 @@ function handleRoute (seneca, options, request, reply, route, next) {
     // This is what the seneca handler will get
     // Note! request$ and response$ will be stripped
     // if the message is sent over transport.
-    const payload = {
+    var payload = {
       request$: request,
       response$: reply,
       args: {
@@ -77,7 +77,8 @@ function handleRoute (seneca, options, request, reply, route, next) {
         route: route,
         params: request.params,
         query: request.query,
-        user: request.user || null
+        user: request.user || null,
+        headers: request.headers
       }
     }
 
@@ -88,14 +89,19 @@ function handleRoute (seneca, options, request, reply, route, next) {
       }
 
       // Redirect or reply depending on config.
-      if (route.redirect || response.redirect) {
-        return reply.redirect(route.redirect || response.redirect)
+      if (route.redirect) {
+        return reply.redirect(route.redirect)
       }
 
-      return reply.status(response.statusCode || 200)
+      if (!_.isObject(response)) return reply.send(response)
+
+      if (response.redirect) {
+        return reply.redirect(response.statusCode || response.status || 302, response.redirect)
+      }
+
+      return reply.status(response.statusCode || response.status || 200)
                   .set(response.headers || {})
-                  .send(response.body)
-      
+                  .send(response.body || response)
     })
   }
 }
